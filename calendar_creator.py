@@ -61,7 +61,7 @@ def grouped_event_exists(service, operation_date: datetime) -> bool:
         calendarId=CALENDAR_ID,
         timeMin=f"{date_str}T00:00:00+07:00",
         timeMax=f"{date_str}T23:59:59+07:00",
-        q="OPERATION SCHEDULE",
+        q="OR Schedule",
         singleEvents=True,
     ).execute()
     return len(result.get("items", [])) > 0
