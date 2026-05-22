@@ -1,0 +1,40 @@
+name: Daily OR Schedule Reminder
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # 17:00 ICT (UTC+7) every day
+  workflow_dispatch:       # allow manual trigger from GitHub UI
+
+jobs:
+  run-reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Google credentials
+        run: |
+          echo '${{ secrets.CREDENTIALS_JSON }}' > credentials.json
+          echo '${{ secrets.TOKEN_JSON }}' > token.json
+
+      - name: Restore processed-emails cache
+        uses: actions/cache@v4
+        with:
+          path: processed_emails.json
+          key: processed-emails-${{ github.run_id }}
+          restore-keys: |
+            processed-emails-
+
+      - name: Run reminder
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 main.py
