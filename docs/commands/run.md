@@ -27,6 +27,23 @@ python3 refresh_today.py
 
 Fetches the most recent `LỊCH MỔ CT` email from Gmail regardless of processing history, deletes any existing OR Schedule events for that operation date, and creates a fresh grouped event. Use this after a corrected schedule email arrives.
 
+## Re-authenticating after token expiry
+
+If the GitHub Actions run fails with:
+```
+google.auth.exceptions.RefreshError: ('invalid_grant: Token has been expired or revoked.', ...)
+```
+the `TOKEN_JSON` secret is dead. `auth.py` won't fall back to a fresh login on its own while a (dead) `refresh_token` is present in `token.json` — it tries to refresh and raises instead.
+
+```bash
+mv token.json token.json.expired.bak   # forces auth.py past the refresh branch into a fresh login
+python3 setup_oauth.py                 # opens a browser, log in + grant access
+gh secret set TOKEN_JSON < token.json  # push the new token to GitHub Actions
+gh workflow run daily-reminder.yml     # optional: verify it goes green
+```
+
+Should be rare now that the OAuth consent screen's publishing status is "In production" (changed 2026-06-16) — tokens only die after ~6 months of inactivity or explicit revocation, not the 7-day expiry that "Testing" status enforces.
+
 ## Cron (automated daily)
 
 ```cron
